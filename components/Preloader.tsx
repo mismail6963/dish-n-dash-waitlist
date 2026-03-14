@@ -69,8 +69,7 @@ export default function Preloader({ onComplete }: { onComplete: () => void }) {
           objectFit: 'contain',
         }}
       >
-        <source src="/preloader/dish-n-dash-preloader.webm" type="video/webm" />
-        <source src="/preloader/dish-n-dash-preloader.mp4" type="video/mp4" />
+        <source src="/preloader/Preloader.mp4" type="video/mp4" />
       </video>
     </div>
   );
