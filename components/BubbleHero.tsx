@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { gsap } from 'gsap';
 
 /* ─── Item Data ──────────────────────────────────────────────────────── */
@@ -78,6 +78,8 @@ export default function BubbleHero({ onBubbleClick, className }: BubbleHeroProps
   const containerRef = useRef<HTMLDivElement>(null);
   const bubblesRef = useRef<(HTMLButtonElement | null)[]>([]);
   const labelRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const [baseSize, setBaseSize] = useState(180);
+  const [mounted, setMounted] = useState(false);
 
   // Mutable animation state held in a ref so it persists across renders
   const animState = useRef({
@@ -87,12 +89,18 @@ export default function BubbleHero({ onBubbleClick, className }: BubbleHeroProps
     expanding: false,
   });
 
+  // Hydration-safe: compute bubble size only on client
+  useEffect(() => {
+    setBaseSize(getBubbleSize());
+    setMounted(true);
+  }, []);
+
   /* ── Orbit tick ─────────────────────────────────────────────────── */
 
   const tick = useCallback(() => {
     if (animState.current.paused || animState.current.expanding) return;
 
-    animState.current.angle += 0.0008; // ~131 minutes per revolution — very slow
+    animState.current.angle += 0.003; // slow, refined orbit
     const { rx, ry } = getOrbitRadius();
     const bubbles = bubblesRef.current;
 
@@ -148,8 +156,7 @@ export default function BubbleHero({ onBubbleClick, className }: BubbleHeroProps
 
   useEffect(() => {
     const onResize = () => {
-      // Orbit radius recalculated each tick via getOrbitRadius(),
-      // but we force an immediate position update on resize
+      setBaseSize(getBubbleSize());
       tick();
     };
     window.addEventListener('resize', onResize);
@@ -298,12 +305,11 @@ export default function BubbleHero({ onBubbleClick, className }: BubbleHeroProps
 
   /* ── Render ────────────────────────────────────────────────────── */
 
-  const baseSize = getBubbleSize();
-
   return (
     <section
       ref={containerRef}
       className={`relative flex items-center justify-center min-h-screen w-full overflow-hidden ${className ?? ''}`}
+      style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.3s ease' }}
       aria-label="Dish N Dash hero"
     >
       {/* Subtle radial gradient backdrop */}
