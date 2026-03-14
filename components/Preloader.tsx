@@ -72,12 +72,20 @@ export default function Preloader({ onComplete }: { onComplete: () => void }) {
         onEnded={handleEnded}
         onError={handleError}
         style={{
+          display: 'block',
           position: 'absolute',
           top: 0,
           left: 0,
           width: '100%',
           height: '100%',
           objectFit: 'cover',
+          objectPosition: 'center',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          imageRendering: 'auto',
+          filter: 'contrast(1.05) saturate(1.05)',
         }}
       >
         <source src="/preloader/Preloader.mp4" type="video/mp4" />
