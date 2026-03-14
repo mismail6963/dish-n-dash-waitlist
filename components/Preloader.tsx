@@ -2,14 +2,22 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-const FALLBACK_TIMEOUT_MS = 8000;
-const FADE_DURATION_MS = 600;
+const FALLBACK_TIMEOUT_MS = 5000;
+const FADE_IN_MS = 700;
+const FADE_OUT_MS = 650;
 
 export default function Preloader({ onComplete }: { onComplete: () => void }) {
   const [visible, setVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [fading, setFading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const dismissed = useRef(false);
+
+  // Trigger fade-in on mount
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const dismiss = useCallback(() => {
     if (dismissed.current) return;
@@ -18,10 +26,10 @@ export default function Preloader({ onComplete }: { onComplete: () => void }) {
     setTimeout(() => {
       setVisible(false);
       onComplete();
-    }, FADE_DURATION_MS);
+    }, FADE_OUT_MS);
   }, [onComplete]);
 
-  // Fallback timeout so the preloader never traps the user
+  // Fallback timeout — never trap the user
   useEffect(() => {
     const timer = setTimeout(dismiss, FALLBACK_TIMEOUT_MS);
     return () => clearTimeout(timer);
@@ -43,15 +51,16 @@ export default function Preloader({ onComplete }: { onComplete: () => void }) {
     <div
       style={{
         position: 'fixed',
-        inset: 0,
-        zIndex: 100,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 9999,
         backgroundColor: '#050505',
-        opacity: fading ? 0 : 1,
-        transition: `opacity ${FADE_DURATION_MS}ms ease-in-out`,
+        opacity: fading ? 0 : mounted ? 1 : 0,
+        transition: `opacity ${fading ? FADE_OUT_MS : FADE_IN_MS}ms ease-in-out`,
         pointerEvents: fading ? 'none' : 'auto',
+        overflow: 'hidden',
       }}
     >
       <video
@@ -59,14 +68,16 @@ export default function Preloader({ onComplete }: { onComplete: () => void }) {
         autoPlay
         muted
         playsInline
+        preload="auto"
         onEnded={handleEnded}
         onError={handleError}
         style={{
-          maxWidth: '100%',
-          maxHeight: '100%',
-          width: 'auto',
-          height: 'auto',
-          objectFit: 'contain',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
         }}
       >
         <source src="/preloader/Preloader.mp4" type="video/mp4" />
